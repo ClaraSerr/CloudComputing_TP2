@@ -21,6 +21,7 @@ def create_security_group(vpc_id, ports):
                                              )
         security_group_id = security_group.group_id
         for port in ports: # In our use case, ports = [22, 80, 443]
+            # Create inbound rule for port
             security_group.authorize_ingress(
                 DryRun=False,
                 IpPermissions=[
@@ -37,6 +38,7 @@ def create_security_group(vpc_id, ports):
                     }
                 ]
             )
+            # Create outbound rule for port
             ec2_CLIENT.authorize_security_group_egress(
                 GroupId=security_group_id,
                 IpPermissions=[
@@ -60,7 +62,7 @@ def create_security_group(vpc_id, ports):
         print(e)
 
 def create_instance(id_min,id_max,instance_type,keyname,name,security_id,availability_zone):
-    Instances=[]
+    Instances=[] # To save instance info after creation
     for i in range(id_min,id_max+1):
         Instances+=ec2_RESSOURCE.create_instances(
             ImageId="ami-08c40ec9ead489470",
@@ -68,7 +70,7 @@ def create_instance(id_min,id_max,instance_type,keyname,name,security_id,availab
             KeyName=keyname,
             MinCount=1,
             MaxCount=1,
-            # Specify the number of the instances in its Tag Name
+            # Specify the id of the instances in its Tag Name (did not made it work)
             TagSpecifications=[
                 {
                     'ResourceType': 'instance',
@@ -88,34 +90,48 @@ def create_instance(id_min,id_max,instance_type,keyname,name,security_id,availab
 
 
 
-def create_commands(cluster_number,instance_number):
+def create_commands():
     ### stores in a list the set of commands needed to :
     ### install java
     ### instal and setup hadoop
     commands = [
+
+    # Install java
     'sudo add-apt-repository ppa:webupd8team/java',
     'sudo apt-get update', 
     'yes | sudo apt-get install oracle-java8-installer',
     'sudo apt-get install oracle-java8-set-default',
+
+    # Install Python3
     'yes | sudo apt-get install python3-pip',
+
     # adds to path the location of java
     '''echo "export JAVA_HOME=/usr/lib/jvm/java-7-oracle
 export PATH=$JAVA_HOME/bin" >> ~/.profile''',
     'source ~/.profile ',
+
+    # Download hadoop
     'wget https://dlcdn.apache.org/hadoop/common/hadoop-3.3.4/hadoop-3.3.4.tar.gz',
     'tar -xf hadoop-3.3.4.tar.gz -C /usr/local/',
+
+    # adds to path the location of hadoop
     '''echo "export HADOOP_PREFIX=/usr/local/hadoop-3.3.4
 export PATH=$HADOOP_PREFIX/bin:$PATH" >> ~/.profile''',
+
+    # add paths of java and hadoop to script
     '''echo "export JAVA_HOME=/usr/lib/jvm/java-8-oracle$ 
 export HADOOP_PREFIX=/usr/local/hadoop-3.3.4" >> etc/hadoop/hadoop-env.sh''',
     #'hadoop',
 
+    # Switch to Pseudo-Distributed Mode
     '''sed 's/<name>fs.defaultFS<\/name>
         <value>.*<\/value>/<name>fs.defaultFS<\/name>
         <value>hdfs:\/\/localhost:9000<\/value>' etc/hadoop/core-site.xml''',
     '''sed 's/<name>dfs.replication<\/name>
         <value>.*<\/value>/<name>dfs.replication<\/name>
         <value>1<\/value>' etc/hadoop/hdfs-site.xml''',
+
+    # Setting up SSH
     'sudo apt-get install ssh ',
     'ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa',
     'cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys',
@@ -142,6 +158,7 @@ export HADOOP_PREFIX=/usr/local/hadoop-3.3.4" >> etc/hadoop/hadoop-env.sh''',
     'hdfs dfs -put $HADOOP_PREFIX/etc/hadoop input ',
     'hadoop jar $HADOOP_PREFIX/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.4.jar grep input output "dfs+"',
 
+    # output the results
     'hdfs dfs -get output output',
     'cat output/*',
     ]
@@ -149,6 +166,7 @@ export HADOOP_PREFIX=/usr/local/hadoop-3.3.4" >> etc/hadoop/hadoop-env.sh''',
 
 
 def main():
+    # Get global Vpc in use
     response = ec2_CLIENT.describe_vpcs()
     vpc_id = response.get('Vpcs', [{}])[0].get('VpcId', '')
     
@@ -158,11 +176,11 @@ def main():
     # Launches 1 m4_large instance
     Instances_m4=create_instance(1,1,"m4.large","vockey","m4_large_",security_group_id,"us-east-1b")
 
-    m4_IDs = [{'Id':instance.instance_id} for instance in Instances_m4]
-
+    # Stores DNS and IP adress of the instance
     DNS_addresses_m4=[]
     IP_addresses_m4=[]
 
+    # Generic code in case of creation of multiple instances
     for instance in Instances_m4:
         instance.wait_until_running()
         # Reload the instance attributes
@@ -185,16 +203,19 @@ def main():
 
     for i in range(len(DNS_addresses_m4)):
         print("Connecting to ", DNS_addresses_m4[i])
+        # SSH connection to instance
         c.connect( hostname = DNS_addresses_m4[i], username = "ubuntu", pkey = k )
         print("Connected")
-        commands = create_commands("cluster1",i+1)
+        # Commands to be executed on the instance
+        commands = create_commands()
  
         for command in commands[:-1]:
             print("Executing {}".format( command ))
             stdin , stdout, stderr = c.exec_command(command)
             print(stdout.read())
             print(stderr.read())
-        
+
+        # OUTDATED ?
         # The last command to be executed does not send anything to stdout, so we don't read it not to be stuck
         print("Executing {}".format( commands[-1] ))
         stdin , stdout, stderr = c.exec_command(commands[-1])
@@ -207,6 +228,8 @@ def main():
     #print(cluster_1, cluster_2)
     
     print('Launching complete')
+
+    # Cloudwatch metrics getter
     '''
     response = cloudwatch.get_metric_data(
         MetricDataQueries=[
