@@ -1,0 +1,27 @@
+printf '#!/bin/bash\n\nFILES="input/*"\nfor INT in 1 2 3\ndo\nfor f in $FILES\ndo\necho "$f">>Hadooptime$INT.txt\n(time $HADOOP_HOME/bin/hadoop jar hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.4.jar wordcount $f output$f 2> command.txt) 2>> Hadooptime$INT.txt;\ndone;\ndone' > script.sh
+
+chmod +x script.sh
+
+hdfs://localhost:54310/user/hduser_/input/j4j4xdw6
+
+$HADOOP_HOME/bin/hdfs dfs -rm outputinput/2h6a75nk/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputinput/4vxdw3pa/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputinput/datumz6m/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputinput/dybs9bnk/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputinput/j4j4xdw6/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputinput/kh9excea/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputinput/vwvram8/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputinput/weh83uyn/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputinput/ym8s5fm4/*
+
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/2h6a75nk
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/4vxdw3pa
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/datumz6m
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/dybs9bnk
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/j4j4xdw6
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/kh9excea
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/vwvram8
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/weh83uyn
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/ym8s5fm4
+
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputinput
