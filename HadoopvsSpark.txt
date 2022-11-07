@@ -1,8 +1,38 @@
+# HADOOP
+
+# Run on the whole dataset
+
+time $HADOOP_HOME/bin/hadoop jar hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.4.jar wordcount input output
+$HADOOP_HOME/bin/hdfs dfs -rm output/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r output
+
+# OUTPUT
+#1st time :
+#real	0m8.180s
+#user	0m13.139s
+#sys	0m0.581s
+
+#2nd time :
+#real	0m8.031s
+#user	0m13.146s
+#sys	0m0.544s
+
+#3rd time :
+#real	0m8.204s
+#user	0m13.575s
+#sys	0m0.675s
+
+# Create bash script to run 3 times on each file
+
 printf '#!/bin/bash\n\nFILES="input/*"\nfor INT in 1 2 3\ndo\nfor f in $FILES\ndo\necho "$f">>Hadooptime$INT.txt\n(time $HADOOP_HOME/bin/hadoop jar hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.4.jar wordcount $f output$f 2> command.txt) 2>> Hadooptime$INT.txt;\ndone;\ndone' > script.sh
 
+# Add rights 
 chmod +x script.sh
 
-hdfs://localhost:54310/user/hduser_/input/j4j4xdw6
+# Run it
+ ./script.sh
+
+# Delete folders
 
 $HADOOP_HOME/bin/hdfs dfs -rm outputinput/2h6a75nk/*
 $HADOOP_HOME/bin/hdfs dfs -rm outputinput/4vxdw3pa/*
@@ -25,3 +55,234 @@ $HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/weh83uyn
 $HADOOP_HOME/bin/hdfs dfs -rm -r outputinput/ym8s5fm4
 
 $HADOOP_HOME/bin/hdfs dfs -rm -r outputinput
+
+# PYSPARK
+
+# Run on the whole dataset
+
+pyspark
+import time
+start = time.time()
+for filename in ["4vxdw3pa","kh9excea","dybs9bnk","datumz6m","j4j4xdw6","ym8s5fm4","2h6a75nk","vwvram8","weh83uyn"]:
+    text_file = sc.textFile("hdfs://localhost:54310/user/hduser_/input/"+filename)
+    counts = text_file.flatMap(lambda line: line.split(" ")) \
+                 .map(lambda word: (word, 1)) \
+                 .reduceByKey(lambda a, b: a + b)
+    counts.saveAsTextFile("hdfs://localhost:54310/user/hduser_/output"+filename)
+
+stop=time.time()
+print(stop-start)
+   
+     
+exit()
+
+$HADOOP_HOME/bin/hdfs dfs -rm output2h6a75nk/*	
+$HADOOP_HOME/bin/hdfs dfs -rm outputdatumz6m/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputdybs9bnk/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputj4j4xdw6/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputkh9excea/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputvwvram8/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputweh83uyn/*
+$HADOOP_HOME/bin/hdfs dfs -rm outputym8s5fm4/*
+
+$HADOOP_HOME/bin/hdfs dfs -rm -r output2h6a75nk
+$HADOOP_HOME/bin/hdfs dfs -rm -r output4vxdw3pa
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputdatumz6m
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputdybs9bnk
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputj4j4xdw6
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputkh9excea
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputvwvram8
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputweh83uyn
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputym8s5fm4
+
+
+# Script to run on every file independently
+
+pyspark
+import time
+start = time.time()
+text_file = sc.textFile("hdfs://localhost:54310/user/hduser_/input/"+"4vxdw3pa")
+counts = text_file.flatMap(lambda line: line.split(" ")) \
+          .map(lambda word: (word, 1)) \
+          .reduceByKey(lambda a, b: a + b)
+counts.saveAsTextFile("hdfs://localhost:54310/user/hduser_/output"+"4vxdw3pa")
+stop=time.time()
+print(stop-start)
+
+exit()
+
+$HADOOP_HOME/bin/hdfs dfs -rm output4vxdw3pa/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r output4vxdw3pa
+
+
+pyspark
+import time
+start = time.time()
+text_file = sc.textFile("hdfs://localhost:54310/user/hduser_/input/"+"kh9excea")
+counts = text_file.flatMap(lambda line: line.split(" ")) \
+          .map(lambda word: (word, 1)) \
+          .reduceByKey(lambda a, b: a + b)
+counts.saveAsTextFile("hdfs://localhost:54310/user/hduser_/output"+"kh9excea")
+stop=time.time()
+print(stop-start)
+
+exit()
+
+$HADOOP_HOME/bin/hdfs dfs -rm outputkh9excea/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputkh9excea
+
+
+pyspark
+import time
+start = time.time()
+text_file = sc.textFile("hdfs://localhost:54310/user/hduser_/input/"+"dybs9bnk")
+counts = text_file.flatMap(lambda line: line.split(" ")) \
+          .map(lambda word: (word, 1)) \
+          .reduceByKey(lambda a, b: a + b)
+counts.saveAsTextFile("hdfs://localhost:54310/user/hduser_/output"+"dybs9bnk")
+stop=time.time()
+print(stop-start)
+
+exit()
+
+$HADOOP_HOME/bin/hdfs dfs -rm outputdybs9bnk/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputdybs9bnk
+
+
+pyspark
+import time
+start = time.time()
+text_file = sc.textFile("hdfs://localhost:54310/user/hduser_/input/"+"datumz6m")
+counts = text_file.flatMap(lambda line: line.split(" ")) \
+          .map(lambda word: (word, 1)) \
+          .reduceByKey(lambda a, b: a + b)
+counts.saveAsTextFile("hdfs://localhost:54310/user/hduser_/output"+"datumz6m")
+stop=time.time()
+print(stop-start)
+
+exit()
+
+$HADOOP_HOME/bin/hdfs dfs -rm outputdatumz6m/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputdatumz6m
+
+
+pyspark
+import time
+start = time.time()
+text_file = sc.textFile("hdfs://localhost:54310/user/hduser_/input/"+"j4j4xdw6")
+counts = text_file.flatMap(lambda line: line.split(" ")) \
+          .map(lambda word: (word, 1)) \
+          .reduceByKey(lambda a, b: a + b)
+counts.saveAsTextFile("hdfs://localhost:54310/user/hduser_/output"+"j4j4xdw6")
+stop=time.time()
+print(stop-start)
+
+exit()
+
+$HADOOP_HOME/bin/hdfs dfs -rm outputj4j4xdw6/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputj4j4xdw6
+
+
+pyspark
+import time
+start = time.time()
+text_file = sc.textFile("hdfs://localhost:54310/user/hduser_/input/"+"ym8s5fm4")
+counts = text_file.flatMap(lambda line: line.split(" ")) \
+          .map(lambda word: (word, 1)) \
+          .reduceByKey(lambda a, b: a + b)
+counts.saveAsTextFile("hdfs://localhost:54310/user/hduser_/output"+"ym8s5fm4")
+stop=time.time()
+print(stop-start)
+
+exit()
+
+$HADOOP_HOME/bin/hdfs dfs -rm outputym8s5fm4/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputym8s5fm4
+
+
+pyspark
+import time
+start = time.time()
+text_file = sc.textFile("hdfs://localhost:54310/user/hduser_/input/"+"2h6a75nk")
+counts = text_file.flatMap(lambda line: line.split(" ")) \
+          .map(lambda word: (word, 1)) \
+          .reduceByKey(lambda a, b: a + b)
+counts.saveAsTextFile("hdfs://localhost:54310/user/hduser_/output"+"2h6a75nk")
+stop=time.time()
+print(stop-start)
+
+exit()
+
+$HADOOP_HOME/bin/hdfs dfs -rm output2h6a75nk/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r output2h6a75nk
+
+
+
+pyspark
+import time
+start = time.time()
+text_file = sc.textFile("hdfs://localhost:54310/user/hduser_/input/"+"vwvram8")
+counts = text_file.flatMap(lambda line: line.split(" ")) \
+          .map(lambda word: (word, 1)) \
+          .reduceByKey(lambda a, b: a + b)
+counts.saveAsTextFile("hdfs://localhost:54310/user/hduser_/output"+"vwvram8")
+stop=time.time()
+print(stop-start)
+
+exit()
+
+$HADOOP_HOME/bin/hdfs dfs -rm outputvwvram8/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputvwvram8
+
+
+pyspark
+import time
+start = time.time()
+text_file = sc.textFile("hdfs://localhost:54310/user/hduser_/input/"+"weh83uyn")
+counts = text_file.flatMap(lambda line: line.split(" ")) \
+          .map(lambda word: (word, 1)) \
+          .reduceByKey(lambda a, b: a + b)
+counts.saveAsTextFile("hdfs://localhost:54310/user/hduser_/output"+"weh83uyn")
+stop=time.time()
+print(stop-start)
+
+exit()
+
+$HADOOP_HOME/bin/hdfs dfs -rm outputweh83uyn/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r outputweh83uyn
+
+# Test on Spark
+
+# Creation of python script
+
+echo "import os
+import pyspark
+from pyspark import SparkContext, SparkConf
+
+ 
+ 
+if __name__ == '__main__':
+    directory = 'input'
+
+    sc = SparkContext('local','PySpark Word Count Exmaple')
+    RDD = sc.emptyRDD()
+    for filename in os.listdir(directory):
+        f = os.path.join(directory, filename)
+    
+        if os.path.isfile(f):
+            words = sc.textFile(f).flatMap(lambda line: line.split(' '))
+            wordMap = words.map(lambda word: (word, 1))
+            wordCounts = wordMap.reduceByKey(lambda a,b:a +b)
+        RDD=RDD.union(wordCounts)
+    RDD = RDD.reduceByKey(lambda x,y : x+y)
+# save the counts to output
+    RDD.saveAsTextFile(os.getcwd()+'/pysparkOutput')" | sudo tee app.py
+
+time python3 app.py
+
+# OUTPUT
+#real	0m12.297s
+#user	0m0.261s
+#sys	0m0.051s
+
+
