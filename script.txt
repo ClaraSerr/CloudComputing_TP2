@@ -1,26 +1,43 @@
+# Download the instance key
+# protect the key against accidental overwriting
 chmod 400 /home/claraserr/Documents/LOG8415E/assignment2_key.pem
-ssh -i assignment2_key.pem azureuser@20.220.231.74
 
+# Connect to instance with Public IP address
+ssh -i assignment2_key.pem azureuser@20.220.228.6
+
+# Add user for hadoop setup
+# Password set as admin
 sudo addgroup hadoop_
 sudo adduser --ingroup hadoop_ hduser_
+
+# Give sudo right to hduser_
 sudo adduser hduser_ sudo
+
+# Login as huduser_
 su hduser_
 
+# Set up ssh for hadoop
+# Create new key
 ssh-keygen -t rsa -P ""
+
+# Enable ssh access
 cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
 
+# Test connection
 ssh localhost
 
-sudo apt-get update
-sudo apt-get install default-jdk
+# Install Java
+admin | sudo apt-get update
+y | sudo apt-get install default-jdk
 
+# Install Hadoop
 wget https://dlcdn.apache.org/hadoop/common/hadoop-3.3.4/hadoop-3.3.4.tar.gz
-
 sudo tar -xzvf hadoop-3.3.4.tar.gz
 
 sudo mv hadoop-3.3.4 hadoop
 sudo chown -R hduser_:hadoop_ hadoop
 
+# Add paths to bashrc
 echo "#Set HADOOP_HOME
 export HADOOP_HOME=~/hadoop
 #Set JAVA_HOME
@@ -30,6 +47,8 @@ export PATH=$PATH:$HADOOP_HOME/bin" >> .bashrc
 
 . ~/.bashrc
 
+
+# Update configuration files
 cd /hadoop/etc/hadoop
 
 sed -i 's/# export JAVA_HOME=/export JAVA_HOME=\/usr\/lib\/jvm\/java-11-openjdk-amd64/' hadoop-env.sh
@@ -57,56 +76,74 @@ sudo chmod 750 /home/hduser_/hdfs
 
 $HADOOP_HOME/bin/hdfs namenode -format
 
+# Start single node cluster
 $HADOOP_HOME/sbin/start-dfs.sh
 
 $HADOOP_HOME/sbin/start-yarn.sh
 
+jps
 
-curl  http://www.gutenberg.org/cache/epub/4300/pg4300.txt -o input/pg4300.txt
-
-
+# Make the HDFS directories required to execute MapReduce jobs
 
 $HADOOP_HOME/bin/hdfs dfs -mkdir /user
-hduser_@assignment2:~$ $HADOOP_HOME/bin/hdfs dfs -mkdir /user/admin
-hduser_@assignment2:~$ $HADOOP_HOME/bin/hdfs dfs -mkdir input
-mkdir: `hdfs://localhost:54310/user/hduser_': No such file or directory
-hduser_@assignment2:~$ ls
-hadoop  hadoop-3.3.4.tar.gz  hdfs  input
-hduser_@assignment2:~$ $HADOOP_HOME/bin/hdfs dfs -mkdir /user/hduser_
-hduser_@assignment2:~$ $HADOOP_HOME/bin/hdfs dfs -mkdir input
 
-scp -i assignment2_key.pem /home/claraserr/Documents/LOG8415E/CloudComputing_TP2/pg4300.txt azureuser@20.220.231.74:~/
+$HADOOP_HOME/bin/hdfs dfs -mkdir /user/hduser_
+$HADOOP_HOME/bin/hdfs dfs -mkdir input4300
 
+# Copy pg4300.txt from local computer to VM
+
+scp -i assignment2_key.pem /home/claraserr/Documents/LOG8415E/CloudComputing_TP2/pg4300.txt azureuser@20.220.228.6:~/
+
+# Copy from user azureuser to user hduser_
 sudo cp /home/azureuser/pg4300.txt /home/hduser_/pg4300.txt && sudo chown hduser_:hadoop_ /home/hduser_/pg4300.txt
 
-$HADOOP_HOME/bin/hdfs dfs -copyFromLocal pg4300.txt input
+# Put file into hdfs
+$HADOOP_HOME/bin/hdfs dfs -copyFromLocal pg4300.txt input4300
 
+# Run wordcount
+$HADOOP_HOME/bin/hadoop jar hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.4.jar wordcount input4300/pg4300.txt output
 
-$HADOOP_HOME/bin/hadoop jar hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.4.jar wordcount input/pg4300.txt output
+# Delete output folder and its content to run jobs again
+$HADOOP_HOME/bin/hdfs dfs -rm output/*
+$HADOOP_HOME/bin/hdfs dfs -rm -r output
+
+# Performance measure
+time $HADOOP_HOME/bin/hadoop jar hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.4.jar wordcount input4300/pg4300.txt output
 
 $HADOOP_HOME/bin/hdfs dfs -rm output/*
 $HADOOP_HOME/bin/hdfs dfs -rm -r output
-time $HADOOP_HOME/bin/hadoop jar hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.4.jar wordcount input4300/pg4300.txt output
 
-real	0m6.885s
-user	0m11.141s
-sys	0m0.454s
+# OUTPUT
+#real	0m6.885s
+#user	0m11.141s
+#sys	0m0.454s
 
-
+# Linux wordcount
 cat pg4300.txt | tr ' ' '\n' | sort | uniq -c
 time cat pg4300.txt | tr ' ' '\n' | sort | uniq -c
 
-real	0m0.697s
-user	0m0.492s
-sys	0m0.212s
+# OUTPUT
+#real	0m0.697s
+#user	0m0.492s
+#sys	0m0.212s
 
+
+# Instal python and pyspark
 
 sudo apt-get install python3-pip
-pip install pyspark
+pip3 install pyspark
 
-$HADOOP_HOME/bin/hdfs dfs -rm input/pg4300.txt 
-$HADOOP_HOME/bin/hdfs dfs -rm output/*
-$HADOOP_HOME/bin/hdfs dfs -rm -r output
+# Install Spark 
+
+wget https://dlcdn.apache.org/spark/spark-3.3.1/spark-3.3.1-bin-hadoop3.tgz 
+
+sudo tar -xzvf spark-3.3.1-bin-hadoop3.tgz 
+sudo mv spark-3.3.1-bin-hadoop3 /usr/local/spark
+echo "export PATH=$PATH:/usr/local/spark/bin" >> .bashrc
+source ~/.bashrc
+
+# Download dataset
+
 wget -P input https://tinyurl.com/4vxdw3pa
 wget -P input https://tinyurl.com/kh9excea
 wget -P input https://tinyurl.com/dybs9bnk
@@ -116,60 +153,11 @@ wget -P input https://tinyurl.com/ym8s5fm4
 wget -P input https://tinyurl.com/2h6a75nk
 wget -P input https://tinyurl.com/vwvram8
 wget -P input https://tinyurl.com/weh83uyn
+
+$HADOOP_HOME/bin/hdfs dfs -mkdir input
+
 $HADOOP_HOME/bin/hdfs dfs -copyFromLocal input/* input
 
 
-3 times :
-
-time $HADOOP_HOME/bin/hadoop jar hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.4.jar wordcount input output
-$HADOOP_HOME/bin/hdfs dfs -rm output/*
-$HADOOP_HOME/bin/hdfs dfs -rm -r output
-
-1st time :
-real	0m8.180s
-user	0m13.139s
-sys	0m0.581s
-
-2nd time :
-real	0m8.031s
-user	0m13.146s
-sys	0m0.544s
-
-3rd time :
-real	0m8.204s
-user	0m13.575s
-sys	0m0.675s
-
-
-pip3 install pyspark
-
-echo "import os
-import pyspark
-from pyspark import SparkContext, SparkConf
-
- 
- 
-if __name__ == '__main__':
-    directory = 'input'
-
-    sc = SparkContext('local','PySpark Word Count Exmaple')
-    RDD = sc.emptyRDD()
-    for filename in os.listdir(directory):
-        f = os.path.join(directory, filename)
-    
-        if os.path.isfile(f):
-            words = sc.textFile(f).flatMap(lambda line: line.split(' '))
-            wordMap = words.map(lambda word: (word, 1))
-            wordCounts = wordMap.reduceByKey(lambda a,b:a +b)
-        RDD=RDD.union(wordCounts)
-    RDD = RDD.reduceByKey(lambda x,y : x+y)
-# save the counts to output
-    RDD.saveAsTextFile(os.getcwd()+'/pysparkOutput')" | sudo tee app.py
-
-time python3 app.py
-
-real	0m12.297s
-user	0m0.261s
-sys	0m0.051s
 
 
