@@ -1,0 +1,26 @@
+scp -i assignment2_key.pem /home/claraserr/Documents/LOG8415E/CloudComputing_TP2/soc-LiveJournal1Adj.txt azureuser@20.220.228.6:~/
+
+sudo cp /home/azureuser/soc-LiveJournal1Adj.txt /home/hduser_/soc-LiveJournal1Adj.txt && sudo chown hduser_:hadoop_ /home/hduser_/soc-LiveJournal1Adj.txt
+
+$HADOOP_HOME/bin/hdfs dfs -mkdir inputFriends
+$HADOOP_HOME/bin/hdfs dfs -copyFromLocal soc-LiveJournal1Adj.txt inputFriends
+
+
+
+# EXECUTE SCRIPT FROM Friends.py
+
+$HADOOP_HOME/bin/hdfs dfs -get outputfriends12 outputfriends12
+
+# get the ids of the user of interest for the report
+
+grep -P "924\t" outputfriends12/part-00000
+grep -P "8941\t" outputfriends12/part-00000
+grep -P "8942\t" outputfriends12/part-00001
+grep -P "9019\t" outputfriends12/part-00000
+grep -P "9020\t" outputfriends12/part-00000
+grep -P "9021\t" outputfriends12/part-00000
+grep -P "9022\t" outputfriends12/part-00000
+grep -P "9090\t" outputfriends12/part-00000
+grep -P "9092\t" outputfriends12/part-00000
+grep -P "9093\t" outputfriends12/part-00001
+
